@@ -5,14 +5,22 @@ import { HttpModule } from '@angular/http';
 
 import { AppComponent } from './app.component';
 
+import { AlertModule,
+         DatepickerModule,
+         TimepickerModule,
+       } from 'ng2-bootstrap/ng2-bootstrap';
+
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
   ],
   imports: [
     BrowserModule,
     FormsModule,
-    HttpModule
+    HttpModule,
+    AlertModule,
+    DatepickerModule,
+    TimepickerModule,
   ],
   providers: [],
   bootstrap: [AppComponent]

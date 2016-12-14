@@ -1,3 +1,86 @@
-<h1>
-  {{title}}
-</h1>
+<div>
+
+  <div class="container jumbotron">
+    <h1>Binary system phase calculator</h1>
+  </div>
+  <div>
+    <br><hr>
+    <div>
+      <h1>Enter ephemeris...</h1>
+      <h3>Enter period:
+        <input type="number" #period (keyup.enter)="onChangePer(period.value)">
+        Unit:<select class="" name="selPerUnit">
+          <option value="">min</option>
+          <option value="">hour</option>
+          <option value="">day</option>
+          <option value="">month</option>
+          <option value="">year</option>
+        </select>
+      </h3>
+      <h3>Enter zero point (JD):
+        <input type="number" #zp (keyup.enter)="onChangeZp(zp.value)">
+      </h3>
+    </div>
+
+    <div>
+      <h1>... or select a binary system</h1>
+        <select class="" name="selBinSys" [(ngModel)]="binsys" (change)="getBinSys($event)">
+          <option value="etaCar">eta Car</option>
+          <option value="wr140">WR 140</option>
+          <option value="wr104">WR 104</option>
+        </select>
+    </div>
+  </div>
+
+  <div>
+    <br><hr>
+    <div>
+      <h1>
+        Pick a date and time
+      </h1>
+      <div>
+        <h2>Date/Time pickers go here</h2>
+
+        <div class="calendar">
+          <datepicker
+              [(ngModel)]="myDate"
+              [showWeeks]="false"
+              >
+          </datepicker>
+        </div>
+
+        <timepicker
+            [(ngModel)]="myTime"
+            [showSpinners]="true"
+            [showMeridian]="false"
+            >
+        </timepicker>
+
+        <button class="btn btn-success" (click)="onChangeDate()">
+          Apply date/time
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <br><hr>
+    <div>
+      <h1>
+        Result
+      </h1>
+      <div>
+        <h2>Period: {{ myPer }}</h2>
+        <h2>Zero Point: {{ myZp }}</h2>
+        <h2>Selected date:
+          {{ myTime | date:'EEE, MMM dd, y, HH:mm:ssZ'}} (JD={{ myJD }})
+        </h2>
+        <h2>Phase: {{ myPhase }}</h2>
+        <br>
+        <h2>Selected binary system: {{ binsys }}</h2>
+      </div>
+    </div>
+  </div>
+
+</div>
