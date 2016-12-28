@@ -9,16 +9,18 @@ import * as moment from 'moment/moment';
 })
 export class AppComponent implements OnInit {
 
-  myPer:number = 0;
-  myZp:number = 0;
-  myPhase:number = 0;
+  myPer:number = null;
+  myUnit:string = null;
+  myZp:number = null;
+  myPhase:number = null;
   myDate:Date; //= (moment.utc()).toDate();
   myTime:Date; //= (moment.utc()).toDate();
   myCurrTime:Date; //= (moment.utc()).toDate();;
   myCurrTimeString:string; //= this.myCurrTime.toUTCString();
   myDateTime:number[];
-  binsys:string;
+  binsys:string = null;
   myJD:string; //= this.dateToJD(this.myTime);;
+  displayedPer:number = null;
 
   constructor(){
     // initial values
@@ -64,10 +66,13 @@ export class AppComponent implements OnInit {
     )).toDate();
 
     this.myCurrTimeString = this.myCurrTime.toUTCString();
+    console.log('-> this.myCurrTimeString = ', this.myCurrTimeString);
     // dateToJD() expects a Moment.js object
     this.myJD = this.dateToJD(moment(this.myCurrTime));
 
-    this.getPhase(this.myPer, this.myZp, this.myJD);
+    if (this.myPer !==null && this.myZp !==null) {
+      this.getPhase(this.myPer, this.myZp, this.myJD);
+    }
   }
 
   onClickJD(jd:number) {
@@ -78,16 +83,23 @@ export class AppComponent implements OnInit {
     this.myCurrTime = this.JDToDate(jd);
     // update myCurrTimeString
     this.myCurrTimeString = this.JDToDate(jd).toUTCString();
+    console.log('-> this.JDToDate(jd).toUTCString = ', this.JDToDate(jd).toUTCString());
 
-    this.getPhase(this.myPer, this.myZp, this.myJD);
+    if (this.myPer !==null && this.myZp !==null) {
+      this.getPhase(this.myPer, this.myZp, this.myJD);
+    }
   }
 
   onChangePer(per:number) {
     console.log('%c period = '+per, 'color: red; font-weight: bold');
+    // save displayed period
+    this.displayedPer = per;
     // update myPer
     this.myPer = per;
-    // call getPhase and pass P and ZP
-    this.getPhase(this.myPer, this.myZp, this.myJD);
+
+    if (this.myPer !==null && this.myZp !==null) {
+      this.getPhase(this.myPer, this.myZp, this.myJD);
+    }
   }
 
   onChangeZp(zp:number) {
@@ -95,14 +107,62 @@ export class AppComponent implements OnInit {
     console.log(zp);
     // update zp
     this.myZp = zp;
-    // call getPhase and pass P and ZP
-    this.getPhase(this.myPer, this.myZp, this.myJD);
+
+    if (this.myPer !==null && this.myZp !==null) {
+      this.getPhase(this.myPer, this.myZp, this.myJD);
+    }
   }
 
-  getBinSys(event:any) {
+  onChangePeriodUnit(unit:any) {
+    console.log('onChangePeriodUnit() called');
+    console.log('%cPassed unit: ' + unit, 'color: red');
+    this.myPer = this.displayedPer;
+    this.myUnit = unit;
+    switch (unit) {
+      // N.B.: moment.duration() only accepts Number() data types
+      case 'min':
+        console.log('Convert ' + this.myPer + ' minutes into days');
+        this.myPer = moment.duration(Number(this.myPer), 'm').asDays();
+        this.getPhase(this.myPer,
+                      this.myZp,
+                      this.myJD);
+        break;
+      case 'hour':
+        console.log('Convert ' + this.myPer + ' hours into days');
+        this.myPer = moment.duration(Number(this.myPer), 'h').asDays();
+        this.getPhase(this.myPer,
+                      this.myZp,
+                      this.myJD);
+        break;
+      case 'day':
+        console.log('Do nothing');
+        this.myPer = moment.duration(Number(this.myPer), 'd').asDays();
+        this.getPhase(this.myPer,
+                      this.myZp,
+                      this.myJD);
+        break;
+      case 'month':
+        console.log('Convert ' + this.myPer + ' months into days');
+        this.myPer = moment.duration(Number(this.myPer), 'M').asDays();
+        this.getPhase(this.myPer,
+                      this.myZp,
+                      this.myJD);
+        break;
+      case 'year':
+        console.log('Convert ' + this.myPer + ' years into days');
+        this.myPer = moment.duration(Number(this.myPer), 'y').asDays();
+        this.getPhase(this.myPer,
+                      this.myZp,
+                      this.myJD);
+        break;
+    }
+  }
+
+  getBinSys(selectedBinarySystem:string) {
     console.log("getBinSys() called");
-    console.log(event);
-    this.binsys = event.target.value;
+    console.log(selectedBinarySystem);
+    this.binsys = selectedBinarySystem;
+
     if (this.binsys==='etaCar') {
       this.myPer = 2022.7;
       this.myZp = 2456874.4;
@@ -137,7 +197,7 @@ export class AppComponent implements OnInit {
       // 1582 Oct 05 - 14
       console.log('NO JD DEFINED BETWEEN 1582 Oct 05 - 14')
     } else {
-      // Julian calendar begins on:
+      // Julian calendar ends on:
       // 1582 Oct 05 = 1582.994623655914
       var julCalDecYear = 1582.994623655914;
       var currDecYear = date.year() +
@@ -175,27 +235,28 @@ export class AppComponent implements OnInit {
                 // validate UTC (JD is always in UTC)
                 ((date._isUTC ? date.hour() : date.hour() - date.utcOffset() / 60) - 12) / 24 +
                 date.minute() / 1440 +
-                date.second() / 86400;
+                (date.second() + date.millisecond() / 1000) / 86400;
       }
     }
     return jd.toString();
   };
 
   JDToDate(myJD:number):Date {
+    console.log(myJD);
     // convert from JD to a Date object
-    if (myJD <= 2299160.5) {
+    if (myJD < 2299160.5) {
       // Julian calendar
-      var b:number = 0;
-      var c:number = Number(myJD) + 32082;
+      var b = 0;
+      var c = Number(myJD) + 32082;
     } else {
       // Gregorian calendar
-      var a:number = Number(myJD) + 32044;
-      var b:number = Math.floor((4 * a + 3) / 146097);
-      var c:number = a - Math.floor((146097 * b) / 4);
+      var a = Number(myJD) + 32044;
+      var b = Math.floor((4 * a + 3) / 146097);
+      var c = a - Math.floor((146097 * b) / 4);
     }
-    var d:number = Math.floor((4 * c) / 1461);
-    var e:number = c - Math.floor((1461 * d) / 4);
-    var m:number = Math.floor((5 * e + 2) / 153);
+    var d = Math.floor((4 * c) / 1461);
+    var e = c - Math.floor((1461 * d) / 4);
+    var m = Math.floor((5 * e + 2) / 153);
     var myDay:number = e - Math.floor((153 * m + 2) / 5) + 1;
     var myMonth:number = m + 3 - 12 * Math.floor(m / 10);
     var myYear:number = 100 * b + d - 4800 + Math.floor(m / 10);
@@ -211,14 +272,16 @@ export class AppComponent implements OnInit {
         myHour = 0;
         myMinute = 0;
         mySecond = 0;
+        myMillisecond = 0;
       } else {
         myHour = Math.floor((myDay % 1) < 0.5 ?
-        // (myDay % 1) <= 0.5 corresponds to afternoon + night (i.e. 12:00:01-23:59:59)
+        // (myDay % 1) <= 0.5 corresponds to afternoon + night (i.e. 12:00:01-23:59:59.999)
                             (myDay % 1) * 24 + 12 :
-        // (myDay % 1) > 0.5 corresponds to the "wee" hours + morning (i.e. 00:00:01-11:59:59)
+        // (myDay % 1) > 0.5 corresponds to the "wee" hours + morning (i.e. 00:00:01-11:59:59.999)
                             (myDay % 1) * 24 - 12);
         myMinute = ((myDay % 1) * 1440 - ((myDay % 1) * 1440) % 1) % 60;
         mySecond = ((myDay % 1) * 86400 - ((myDay % 1) * 86400) % 1) % 60;
+        myMillisecond = Number((1000 * (((myDay % 1) * 86400) % 60 - mySecond)).toFixed(0));
         myDay = myDay - myDay % 1;
       }
     } else {
@@ -226,20 +289,55 @@ export class AppComponent implements OnInit {
       myHour = 12;
       myMinute = 0;
       mySecond = 0;
+      myMillisecond = 0;
     }
 
-    // console.log('%cpassed JD: ' + myJD, 'color: red');
-    // console.log('%cJDToDate() result array: ' +                       [myYear <= 0 ? Math.abs(myYear) + 1 + ' BCE': myYear + ' CE',
-    //                       // keep Moment.js format for
-    //                       // months, i.e., 0->Jan; 1->Feb...
-    //                       myMonth - 1,
-    //                       myDay,
-    //                       myHour,
-    //                       myMinute,
-    //                       mySecond], 'font-weight: bold');
+    // compensating for day "bubble up"
+    // due to dates involving midnight
+    if (myDay > 31) {
+      // reset day
+      myDay = 1;
+      // bubble up month
+      myMonth += 1;
+      if (myMonth > 11) {
+        // reset month
+        myMonth = 1;
+        // bubble up year
+        myYear += 1;
+      }
+    }
 
-    return (moment.utc(
-                      // there's no year 0; 1 BCE = "year 0"
+    // // compensating for milliseconds = 1000
+    // if (myMillisecond === 1000) {
+    //   // reset millisecond
+    //   myMillisecond = 0;
+    //   // bubble up second
+    //   mySecond += 1;
+    //   if (mySecond === 60 ) {
+    //     mySecond = 0;
+    //     myMinute += 1;
+    //     if (myMinute === 60) {
+    //       myMinute = 0;
+    //       myHour += 1;
+    //       if (myHour === 24) {
+    //         myHour = 0;
+    //         myDay += 1;
+    //       }
+    //     }
+    //   }
+    //
+    // }
+
+    // compensating for the fact that both
+    // year=0 and year=-1 correspond to 1 B.C.E.
+    myYear = myYear <= 0 ? myYear - 1 : myYear;
+
+    // console.log(myYear, myMonth-1, myDay, myHour, myMinute, mySecond, myMillisecond);
+
+    // return number of milliseconds since
+    // the Unix Epoch (Jan 1 1970 12AM UTC)
+    // (ECMAScript calls this Time Value)
+    return moment.utc(
                       [myYear,
                       // keep Moment.js format for
                       // months, i.e., 0->Jan; 1->Feb...
@@ -247,8 +345,9 @@ export class AppComponent implements OnInit {
                       myDay,
                       myHour,
                       myMinute,
-                      mySecond]
-                    )).toDate();
+                      mySecond,
+                      myMillisecond]
+                    ).toDate();
   }
 
 }
