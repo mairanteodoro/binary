@@ -39,7 +39,7 @@ export class AppComponent implements OnInit {
       ]
     )).toDate();
     this.myCurrTimeString = this.myCurrTime.toUTCString();
-    this.myJD = this.dateToJD(moment(this.myTime));
+    this.myJD = (Number(this.dateToJD(moment(this.myTime))).toFixed(5));
   };
 
   ngOnInit() {}
@@ -68,7 +68,7 @@ export class AppComponent implements OnInit {
     this.myCurrTimeString = this.myCurrTime.toUTCString();
     console.log('-> this.myCurrTimeString = ', this.myCurrTimeString);
     // dateToJD() expects a Moment.js object
-    this.myJD = this.dateToJD(moment(this.myCurrTime));
+    this.myJD = Number(this.dateToJD(moment(this.myCurrTime))).toFixed(5);
 
     if (this.myPer !==null && this.myZp !==null) {
       this.getPhase(this.myPer, this.myZp, this.myJD);
@@ -78,7 +78,7 @@ export class AppComponent implements OnInit {
   onClickJD(jd:number) {
     console.log('onClickJD() called');
     // update jd
-    this.myJD = jd.toString();
+    this.myJD = (jd).toString();
     // call JDToDate()
     this.myCurrTime = this.JDToDate(jd);
     // update myCurrTimeString
@@ -90,27 +90,26 @@ export class AppComponent implements OnInit {
     }
   }
 
-  onChangePer(per:number) {
-    console.log('%c period = '+per, 'color: red; font-weight: bold');
-    // save displayed period
+  onChangeEphemeris(per:number, zp:number, unit:string) {
+    console.log(this.myPer, this.myZp, this.myUnit);
     this.displayedPer = per;
-    // update myPer
-    this.myPer = per;
+    this.myPer = Number(per);
+    this.myZp = Number(zp);
+    this.myUnit = unit;
+    console.log(this.myPer, this.myZp, this.myUnit);
 
-    if (this.myPer !==null && this.myZp !==null) {
+    if (this.myPer !== 0 && this.myZp !== 0 && this.myUnit !== 'none') {
       this.getPhase(this.myPer, this.myZp, this.myJD);
+    } else {
+      this.myPer === 0 && this.myZp === 0 && this.myUnit === 'none' ?
+        alert('Period, unit, and zero point not set!') :
+        this.myPer === 0 ?
+          alert('Period not set!') :
+          this.myZp === 0 ?
+          alert('Zero point not set!') :
+          alert('Choose a unit for the period.');
     }
-  }
 
-  onChangeZp(zp:number) {
-    console.log('%c zp = '+zp, 'color: red; font-weight: bold');
-    console.log(zp);
-    // update zp
-    this.myZp = zp;
-
-    if (this.myPer !==null && this.myZp !==null) {
-      this.getPhase(this.myPer, this.myZp, this.myJD);
-    }
   }
 
   onChangePeriodUnit(unit:any) {
@@ -163,12 +162,23 @@ export class AppComponent implements OnInit {
     console.log(selectedBinarySystem);
     this.binsys = selectedBinarySystem;
 
-    if (this.binsys==='etaCar') {
-      this.myPer = 2022.7;
-      this.myZp = 2456874.4;
-      // calculate phase
-      this.getPhase(this.myPer, this.myZp, this.myJD);
+    switch (this.binsys) {
+      case 'etaCar':
+        this.myPer = 2022.7;
+        this.myZp = 2456874.4;
+        this.displayedPer = this.myPer;
+        this.myUnit = 'day';
+        break;
+      case 'wr140':
+        console.log('WR 140');
+        break;
+      case 'wr104':
+        console.log('WR 104');
+        break;
     }
+
+    // calculate phase
+    this.getPhase(this.myPer, this.myZp, this.myJD);
   }
 
   getPhase(per:number, zp:number, jd:string) {
@@ -179,6 +189,7 @@ export class AppComponent implements OnInit {
     this.myPhase = ((currJD - zp) / per) % 1 < 0 ?
       ((currJD - zp) / per) % 1 + 1 :
       ((currJD - zp) / per) % 1;
+    this.myPhase = Number(this.myPhase.toFixed(5));
   };
 
   dateToJD(date:any):string {
@@ -242,7 +253,6 @@ export class AppComponent implements OnInit {
   };
 
   JDToDate(myJD:number):Date {
-    console.log(myJD);
     // convert from JD to a Date object
     if (myJD < 2299160.5) {
       // Julian calendar
@@ -251,13 +261,13 @@ export class AppComponent implements OnInit {
     } else {
       // Gregorian calendar
       var a = Number(myJD) + 32044;
-      var b = Math.floor((4 * a + 3) / 146097);
+      var b = Math.floor((4 * Number(a) + 3) / 146097);
       var c = a - Math.floor((146097 * b) / 4);
     }
     var d = Math.floor((4 * c) / 1461);
     var e = c - Math.floor((1461 * d) / 4);
-    var m = Math.floor((5 * e + 2) / 153);
-    var myDay:number = e - Math.floor((153 * m + 2) / 5) + 1;
+    var m = Math.floor((5 * Number(e) + 2) / 153);
+    var myDay:number = e - Math.floor((153 * Number(m) + 2) / 5) + 1;
     var myMonth:number = m + 3 - 12 * Math.floor(m / 10);
     var myYear:number = 100 * b + d - 4800 + Math.floor(m / 10);
     // deal with time
@@ -281,8 +291,13 @@ export class AppComponent implements OnInit {
                             (myDay % 1) * 24 - 12);
         myMinute = ((myDay % 1) * 1440 - ((myDay % 1) * 1440) % 1) % 60;
         mySecond = ((myDay % 1) * 86400 - ((myDay % 1) * 86400) % 1) % 60;
-        myMillisecond = Number((1000 * (((myDay % 1) * 86400) % 60 - mySecond)).toFixed(0));
-        myDay = myDay - myDay % 1;
+        myMillisecond = Number((1000 * (((myDay % 1) * 86400) % 60 - mySecond)));
+        // Julian day begins at noon, so if mod < 0.5 -> same day
+        myDay = myDay % 1 < 0.5 ?
+                // still same day
+                myDay - myDay % 1 :
+                // next day
+                myDay - myDay % 1 + 1;
       }
     } else {
       // it is noon
@@ -294,18 +309,18 @@ export class AppComponent implements OnInit {
 
     // compensating for day "bubble up"
     // due to dates involving midnight
-    if (myDay > 31) {
-      // reset day
-      myDay = 1;
-      // bubble up month
-      myMonth += 1;
-      if (myMonth > 11) {
-        // reset month
-        myMonth = 1;
-        // bubble up year
-        myYear += 1;
-      }
-    }
+    // if (myDay > 31) {
+    //   // reset day
+    //   myDay = 1;
+    //   // bubble up month
+    //   myMonth += 1;
+    //   if (myMonth > 11) {
+    //     // reset month
+    //     myMonth = 1;
+    //     // bubble up year
+    //     myYear += 1;
+    //   }
+    // }
 
     // // compensating for milliseconds = 1000
     // if (myMillisecond === 1000) {

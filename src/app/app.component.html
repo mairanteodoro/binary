@@ -8,9 +8,9 @@
     <div>
       <h1>Enter ephemeris...</h1>
       <h3>Enter period:
-        <input type="number" #period (keyup.enter)="onChangePer(period.value)">
-        Unit:<select class="" name="selPerUnit" #unit (change)="onChangePeriodUnit(unit.value)">
-          <option value="none" selected>Select unit</option>
+        <input type="number" #period [value]="myPer" (keyup.enter)="onChangeEphemeris(period.value, zp.value)">
+        <select class="" name="selPerUnit" #unit (change)="onChangePeriodUnit(unit.value)">
+          <option value="none" selected>Select period unit</option>
           <option value="min">min</option>
           <option value="hour">hour</option>
           <option value="day">day</option>
@@ -19,11 +19,13 @@
         </select>
       </h3>
       <h3>Enter zero point (JD):
-        <input type="number" #zp (keyup.enter)="onChangeZp(zp.value)">
+        <input type="number" #zp [value]="myZp" (keyup.enter)="onChangeEphemeris(period.value, zp.value)">
       </h3>
+      <button class="btn btn-lg btn-success" (click)="onChangeEphemeris(period.value, zp.value, unit.value)">Load</button>
     </div>
 
     <div>
+      <br><br><br>
       <h1>... or select a binary system</h1>
         <h3>
           <select class="" name="selBinSys" #binsys (change)="getBinSys(binsys.value)">
@@ -43,7 +45,7 @@
         Pick a date and time...
       </h1>
       <div>
-        <h2>Date/Time pickers go here</h2>
+        <h4>Date</h4>
 
         <div class="calendar">
           <datepicker
@@ -53,7 +55,8 @@
           </datepicker>
         </div>
 
-        <timepicker
+        <h4>Time</h4>
+        <timepicker style="display: flex; align-content: center; justify-content: center;"
             [(ngModel)]="myTime"
             [showSpinners]="true"
             [showMeridian]="false"
@@ -68,10 +71,11 @@
     </div>
 
     <div>
+      <br><br><br>
       <h1>
         ... or enter the Julian date
       </h1>
-      <input [value]="myJD" type="number" #selJD (keyup.enter)="onClickJD(selJD.value)">
+      <input [value]="myJD" type="number" #selJD (keyup.enter)="onClickJD(selJD.value)" step="0.00001">
       <br>
       <button class="btn btn-lg btn-success" (click)="onClickJD(selJD.value)">
         Apply JD
@@ -81,25 +85,27 @@
 
   </div>
 
-  <div class="container">
+  <div class="container bg-primary">
     <br><hr>
     <div>
-      <h1>
-        Model
-      </h1>
+      <h1>Model</h1>
       <div>
-        <h2>Selected date:
+        <h2>Selected date:</h2>
+        <h2>
           {{ myCurrTimeString }}
           (JD@UTC={{ myJD }})
         </h2>
         <br>
-        <h2>Displayed Period and unit: {{ displayedPer }} {{ myUnit }}</h2>
+        <h2>Period and unit:</h2>
+        <h2>{{ displayedPer }} {{ myUnit }}</h2>
+        <br>
+        <h2>Selected binary system: {{ binsys.value }}</h2>
         <hr>
-        <h2>Displayed Period converted to days: {{ myPer }}</h2>
+        <h1>Results</h1>
+        <h2>Period converted to days: {{ myPer }}</h2>
         <h2>Zero Point: {{ myZp }}</h2>
         <h2>Phase: {{ myPhase }}</h2>
         <br>
-        <h2>Selected binary system: {{ binsys.value }}</h2>
       </div>
     </div>
   </div>
